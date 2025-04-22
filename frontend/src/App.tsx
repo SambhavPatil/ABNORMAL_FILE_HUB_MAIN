@@ -16,26 +16,27 @@ const App: React.FC = () => {
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   
-// Load files based on current filters
-const loadFiles = useCallback(async () => {
-  setLoading(true);
-  setApiError(null);
-  try {
-    const data = await fileService.getFiles(filters);
-    // Ensure data is an array
-    setFiles(Array.isArray(data) ? data : []);
-  } catch (error) {
-    console.error('Error loading files:', error);
-    if ((error as any).code === 'ERR_NETWORK') {
-      setApiError('Cannot connect to the server. Please make sure the backend is running.');
-    } else {
-      setApiError(`An error occurred: ${(error as Error).message}`);
+
+  // Load files based on current filters
+  const loadFiles = useCallback(async () => {
+    setLoading(true);
+    setApiError(null);
+    try {
+      const data = await fileService.getFiles(filters);
+      // Ensure data is an array
+      setFiles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading files:', error);
+      if ((error as any).code === 'ERR_NETWORK') {
+        setApiError('Cannot connect to the server. Please make sure the backend is running.');
+      } else {
+        setApiError(`An error occurred: ${(error as Error).message}`);
+      }
+      setFiles([]);
+    } finally {
+      setLoading(false);
     }
-    setFiles([]);
-  } finally {
-    setLoading(false);
-  }
-}, [filters]);
+  }, [filters]);
   
   // Load storage statistics
   const loadStats = async () => {
@@ -78,12 +79,16 @@ const loadFiles = useCallback(async () => {
   
   // Initial load and when filters change
   useEffect(() => {
+    console.log('Loading files based on filters...');
     loadFiles();
-  }, [loadFiles]);
+    // We want this to run ONLY when filters or loadFiles changes
+  }, [filters, loadFiles]);
   
-  // Load stats on initial render
+  // Load stats on initial render only
   useEffect(() => {
+    console.log('Loading stats (initial render only)...');
     loadStats();
+    // Empty dependency array means this runs once on mount
   }, []);
   
   return (

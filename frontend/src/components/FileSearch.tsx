@@ -52,11 +52,13 @@ const FileSearch: React.FC<FileSearchProps> = ({ onFilterChange }) => {
     return value * (sizeMultipliers[unit] || 1);
   };
   
-  // Apply filters when values change
+  // Apply filters when values change with debounce
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    console.log('Filter values changed, setting up debounce timer...');
     // Debounce filter application
     const timerId = setTimeout(() => {
+      console.log('Debounce timer finished, applying filters');
       const filters: FileFilters = {};
       
       if (searchTerm.trim()) {
@@ -86,11 +88,13 @@ const FileSearch: React.FC<FileSearchProps> = ({ onFilterChange }) => {
       }
       
       onFilterChange(filters);
-    }, 300); // 300ms debounce
+    }, 500); // Increased debounce to 500ms
     
-    return () => clearTimeout(timerId);
-  }, [searchTerm, fileType, minSize, maxSize, startDate, endDate, onFilterChange]);
-  
+    return () => {
+      console.log('Cleaning up previous debounce timer');
+      clearTimeout(timerId);
+    };
+  }, [searchTerm, fileType, minSize, maxSize, startDate, endDate]);  
   // Handle form reset
   const handleReset = () => {
     setSearchTerm('');

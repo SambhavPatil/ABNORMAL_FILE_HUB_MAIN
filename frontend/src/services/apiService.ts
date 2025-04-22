@@ -17,10 +17,39 @@ const apiClient = axios.create({
   },
 });
 
+// Simple cache to prevent redundant API calls with the same parameters
+const cache = {
+  files: new Map<string, { data: FileData[], timestamp: number }>(),
+  stats: { data: null as StorageStats | null, timestamp: 0 },
+  
+  // Cache expiration in milliseconds (5 seconds)
+  EXPIRATION: 5000,
+  
+  // Generate a cache key from filters
+  getFilesKey: (filters?: FileFilters): string => {
+    return JSON.stringify(filters || {});
+  },
+  
+  // Check if cache entry is still valid
+  isValid: (timestamp: number): boolean => {
+    return Date.now() - timestamp < cache.EXPIRATION;
+  }
+};
+
 export const fileService = {
   // Get all files with optional filters
   getFiles: async (filters?: FileFilters): Promise<FileData[]> => {
     try {
+      // Check cache first
+      const cacheKey = cache.getFilesKey(filters);
+      const cachedData = cache.files.get(cacheKey);
+      
+      if (cachedData && cache.isValid(cachedData.timestamp)) {
+        console.log('Using cached file data');
+        return cachedData.data;
+      }
+      
+      // Cache miss, make API request
       const params = new URLSearchParams();
       
       if (filters) {
@@ -36,16 +65,24 @@ export const fileService = {
       const response = await apiClient.get('/files/', { params });
       console.log('API response:', response.data);
       
-      // Ensure we always return an array
+      // Process the response data
+      let fileData: FileData[] = [];
       if (Array.isArray(response.data)) {
-        return response.data;
+        fileData = response.data;
       } else if (response.data && Array.isArray(response.data.results)) {
         // Handle DRF pagination
-        return response.data.results;
+        fileData = response.data.results;
       } else {
         console.error('API response is not an array:', response.data);
-        return [];
       }
+      
+      // Update cache
+      cache.files.set(cacheKey, {
+        data: fileData,
+        timestamp: Date.now()
+      });
+      
+      return fileData;
     } catch (error) {
       console.error('API Error in getFiles:', error);
       throw error;
@@ -83,9 +120,29 @@ export const fileService = {
   
   // Get storage statistics
   getStorageStats: async (): Promise<StorageStats> => {
-    const response = await apiClient.get('/stats/');
-    return response.data;
-  },
+    try {
+      // Check cache first
+      if (cache.stats.data && cache.isValid(cache.stats.timestamp)) {
+        console.log('Using cached stats data');
+        return cache.stats.data;
+      }
+      
+      // Cache miss, make API request
+      console.log('Making API request for stats');
+      const response = await apiClient.get('/stats/');
+      
+      // Update cache
+      cache.stats = {
+        data: response.data,
+        timestamp: Date.now()
+      };
+      
+      return response.data;
+    } catch (error) {
+      console.error('API Error in getStorageStats:', error);
+      throw error;
+    }
+  }
 };
 
 export default fileService;
