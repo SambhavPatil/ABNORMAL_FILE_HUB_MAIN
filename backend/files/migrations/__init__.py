@@ -1,0 +1,1 @@
+# This file ensures that the migrations package is recognized by Python.

@@ -1,0 +1,146 @@
+/* FileSearch.css */
+.file-search {
+    background-color: var(--light-bg);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .search-input-wrapper {
+    position: relative;
+    flex: 1;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease;
+  }
+  
+  .search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+  
+  .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+  }
+  
+  .type-select {
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    min-width: 120px;
+    background-color: white;
+    font-size: 0.95rem;
+  }
+  
+  .type-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+  
+  .toggle-filters-button {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  
+  .toggle-filters-button:hover {
+    background-color: var(--medium-bg);
+  }
+  
+  .advanced-filters {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .filter-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .filter-row:last-child {
+    margin-bottom: 0;
+  }
+  
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 150px;
+  }
+  
+  .filter-group label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+  
+  .size-input, .date-input {
+    padding: 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    font-size: 0.95rem;
+  }
+  
+  .size-input:focus, .date-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+  }
+  
+  .reset-button {
+    align-self: flex-end;
+    padding: 0.6rem 1rem;
+    background-color: var(--medium-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: auto;
+    transition: all 0.2s ease;
+  }
+  
+  .reset-button:hover {
+    background-color: var(--border-color);
+  }
+  
+  @media (max-width: 768px) {
+    .search-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    
+    .filter-row {
+      flex-direction: column;
+    }
+    
+    .filter-group {
+      min-width: auto;
+    }
+  }

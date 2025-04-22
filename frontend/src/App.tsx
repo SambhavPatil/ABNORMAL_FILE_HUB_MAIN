@@ -1,45 +1,121 @@
-import React, { useState } from 'react';
-import { FileUpload } from './components/FileUpload';
-import { FileList } from './components/FileList';
+import React, { useState, useEffect, useCallback } from 'react';
+import './App.css';
 
-function App() {
-  const [refreshKey, setRefreshKey] = useState(0);
+import FileUploader from './components/FileUploader'; // Ensure this file exists in the components directory
+import FileList from './components/FileList';
+import FileSearch from './components/FileSearch';
+import StorageStatsPanel from './components/StorageStatsPanel'; // Ensure this file exists in the components directory
 
-  const handleUploadSuccess = () => {
-    setRefreshKey(prev => prev + 1);
+import { FileData, FileFilters, StorageStats } from './types/files';
+import fileService from './services/apiService';
+
+const App: React.FC = () => {
+  const [files, setFiles] = useState<FileData[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [filters, setFilters] = useState<FileFilters>({});
+  const [stats, setStats] = useState<StorageStats | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  
+// Load files based on current filters
+const loadFiles = useCallback(async () => {
+  setLoading(true);
+  setApiError(null);
+  try {
+    const data = await fileService.getFiles(filters);
+    // Ensure data is an array
+    setFiles(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error('Error loading files:', error);
+    if ((error as any).code === 'ERR_NETWORK') {
+      setApiError('Cannot connect to the server. Please make sure the backend is running.');
+    } else {
+      setApiError(`An error occurred: ${(error as Error).message}`);
+    }
+    setFiles([]);
+  } finally {
+    setLoading(false);
+  }
+}, [filters]);
+  
+  // Load storage statistics
+  const loadStats = async () => {
+    try {
+      const data = await fileService.getStorageStats();
+      setStats(data);
+    } catch (error) {
+      console.error('Error loading storage stats:', error);
+    }
   };
-
+  
+  // Handle file upload
+  const handleFileUpload = async (file: File) => {
+    try {
+      await fileService.uploadFile(file);
+      // Refresh files and stats after upload
+      loadFiles();
+      loadStats();
+    } catch (error) {
+      console.error('Error uploading file:', error);
+    }
+  };
+  
+  // Handle file deletion
+  const handleFileDelete = async (id: number) => {
+    try {
+      await fileService.deleteFile(id);
+      // Refresh files and stats after deletion
+      loadFiles();
+      loadStats();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+    }
+  };
+  
+  // Handle search/filter changes
+  const handleFilterChange = (newFilters: FileFilters) => {
+    setFilters(newFilters);
+  };
+  
+  // Initial load and when filters change
+  useEffect(() => {
+    loadFiles();
+  }, [loadFiles]);
+  
+  // Load stats on initial render
+  useEffect(() => {
+    loadStats();
+  }, []);
+  
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">Abnormal Security - File Hub</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            File management system
-          </p>
-        </div>
+    <div className="app-container">
+      <header className="app-header">
+        <h1>Abnormal File Vault</h1>
       </header>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="space-y-6">
-            <div className="bg-white shadow sm:rounded-lg">
-              <FileUpload onUploadSuccess={handleUploadSuccess} />
-            </div>
-            <div className="bg-white shadow sm:rounded-lg">
-              <FileList key={refreshKey} />
-            </div>
-          </div>
+      
+      {apiError && (
+        <div className="api-error-banner">
+          <p>{apiError}</p>
+          <button onClick={() => loadFiles()}>Retry Connection</button>
         </div>
-      </main>
-      <footer className="bg-white shadow mt-8">
-        <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-gray-500">
-            © 2024 File Hub. All rights reserved.
-          </p>
+      )}
+      
+      <div className="app-content">
+        <div className="sidebar">
+          <FileUploader onFileUpload={handleFileUpload} />
+          <StorageStatsPanel stats={stats} />
         </div>
-      </footer>
+        
+        <div className="main-content">
+          <FileSearch onFilterChange={handleFilterChange} />
+          <FileList 
+            files={files} 
+            loading={loading} 
+            onDelete={handleFileDelete}
+          />
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default App;

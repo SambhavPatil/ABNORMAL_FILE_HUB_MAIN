@@ -1,32 +1,43 @@
+version: '3'
+
 services:
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: file_vault_backend
+    volumes:
+      - ./backend:/app
+      - media_data:/app/media
     ports:
       - "8000:8000"
-    volumes:
-      - backend_storage:/app/media
-      - backend_static:/app/staticfiles
-      - backend_data:/app/data
+    command: sh -c "chmod +x /app/entrypoint.sh && /app/entrypoint.sh"
     environment:
-      - DJANGO_DEBUG=True
-      - DJANGO_SECRET_KEY=insecure-dev-only-key
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,backend,localhost:8000,backend:8000
     restart: always
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: file_vault_frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     ports:
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=http://localhost:8000/api
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
     depends_on:
       - backend
     restart: always
 
 volumes:
-  backend_storage:
-  backend_static:
-  backend_data: 
+  media_data:
+
+networks:
+  default:
+    driver: bridge

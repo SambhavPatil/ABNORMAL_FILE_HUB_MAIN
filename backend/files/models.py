@@ -1,24 +1,49 @@
 from django.db import models
-import uuid
+import hashlib
 import os
+from datetime import datetime
 
-def file_upload_path(instance, filename):
-    """Generate file path for new file upload"""
-    ext = filename.split('.')[-1]
-    filename = f"{uuid.uuid4()}.{ext}"
-    return os.path.join('uploads', filename)
+class FileContent(models.Model):
+    """
+    Model that stores the actual content of files.
+    This allows multiple file references to point to the same content.
+    """
+    hash = models.CharField(max_length=64, unique=True, db_index=True)
+    data = models.BinaryField()
+    size = models.PositiveIntegerField()
+    reference_count = models.PositiveIntegerField(default=1)
+    
+    def __str__(self):
+        return f"FileContent({self.hash[:10]}..., {self.size} bytes, {self.reference_count} refs)"
 
 class File(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    file = models.FileField(upload_to=file_upload_path)
-    original_filename = models.CharField(max_length=255)
-    file_type = models.CharField(max_length=100)
-    size = models.BigIntegerField()
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    hash = models.CharField(max_length=64, unique=True, db_index=True, null=True, blank=True)
-
+    """
+    Model representing file metadata with a reference to file content.
+    """
+    name = models.CharField(max_length=255, db_index=True)
+    content = models.ForeignKey(FileContent, on_delete=models.CASCADE, related_name='files')
+    content_type = models.CharField(max_length=100, db_index=True)
+    upload_date = models.DateTimeField(auto_now_add=True, db_index=True)
+    
     class Meta:
-        ordering = ['-uploaded_at']
-
+        ordering = ['-upload_date']
+    
     def __str__(self):
-        return self.original_filename
+        return self.name
+    
+    @property
+    def size(self):
+        return self.content.size
+    
+    @property
+    def file_extension(self):
+        _, ext = os.path.splitext(self.name)
+        return ext.lower()[1:] if ext else ""
+
+    @classmethod
+    def compute_file_hash(cls, file):
+        """Compute SHA-256 hash of a file"""
+        hasher = hashlib.sha256()
+        for chunk in file.chunks():
+            hasher.update(chunk)
+        return hasher.hexdigest()

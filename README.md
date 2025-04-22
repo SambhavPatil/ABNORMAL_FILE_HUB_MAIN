@@ -119,10 +119,34 @@ docker-compose up --build
 - Access file directly through the file URL provided in metadata
 
 ## 🗄️ Project Structure
+Abnormal File Vault is a file hosting application designed to optimize storage efficiency and enhance file retrieval through deduplication and intelligent search capabilities.
+
+## Features
+
+### 1. File Deduplication System
+- Identifies duplicate files during upload
+- Stores references to existing files instead of saving duplicates
+- Tracks and displays storage savings
+
+### 2. Search & Filtering System
+- Search files by filename
+- Filter files by file type, size range, and upload date
+- Support for multiple simultaneous filters
+- Optimized for performance with large datasets
+
+## Tech Stack
+
+- **Frontend**: React with TypeScript
+- **Backend**: Django/DRF (Django Rest Framework)
+- **Database**: SQLite
+- **Containerization**: Docker
+
+## Project Structure
 
 ```
 file-hub/
 ├── backend/                # Django backend
+<<<<<<< HEAD
 │   ├── files/             # Main application
 │   │   ├── models.py      # Data models
 │   │   ├── views.py       # API views
@@ -224,3 +248,79 @@ file-hub/
 
 Make sure to test the zip file and video before submitting to ensure they are complete and working as expected.
 
+=======
+│   ├── files/              # Main application
+│   │   ├── models.py       # Data models
+│   │   ├── views.py        # API views
+│   │   ├── urls.py         # URL routing
+│   │   └── serializers.py  # Data serialization
+│   ├── core/               # Project settings
+│   └── requirements.txt    # Python dependencies
+├── frontend/               # React frontend
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── services/       # API services
+│   │   └── types/          # TypeScript types
+│   └── package.json        # Node.js dependencies
+└── docker-compose.yml      # Docker composition
+```
+
+## Setup Instructions
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+- Git
+
+### Installation and Setup
+
+1. Clone the repository:
+   ```
+   git clone <repository-url>
+   cd abnormal-file-vault
+   ```
+
+2. Start the application using Docker Compose:
+   ```
+   docker-compose up --build
+   ```
+
+3. Access the application:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000/api
+
+### Development Mode
+
+Both the frontend and backend support hot reloading in development mode, so changes will be reflected automatically without having to restart the containers.
+
+## API Endpoints
+
+### Files API
+
+- `GET /api/files/` - List all files with optional filtering
+- `POST /api/files/upload/` - Upload a new file with deduplication
+- `DELETE /api/files/{id}/` - Delete a file
+- `GET /api/stats/` - Get storage statistics
+
+## Storage Optimization
+
+The system uses SHA-256 hash to identify duplicate files:
+
+1. When a file is uploaded, its hash is calculated
+2. If the hash already exists, a new reference is created to the existing content
+3. Reference counting tracks how many files point to each unique content
+4. When a file is deleted, its reference count is decremented
+5. If reference count reaches zero, the actual file content is deleted
+
+This approach significantly reduces storage requirements when the same file is uploaded multiple times.
+
+## Troubleshooting
+
+If you encounter any TypeScript errors related to the `File` type:
+- We've renamed our custom `File` interface to `FileData` to avoid conflicts with the built-in JavaScript `File` type
+- We've fixed the dependency warnings in the React effects by properly using `useCallback` to memoize functions
+
+If you encounter Django migration errors:
+- Make sure you've copied the correct initial migration file into the `backend/files/migrations/` directory
+- You may need to remove any existing SQLite database file and let Django create a new one
+>>>>>>> a6fcb02 (Update backup)
