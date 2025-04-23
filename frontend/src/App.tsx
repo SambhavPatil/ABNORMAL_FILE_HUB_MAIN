@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 
-import FileUploader from './components/FileUploader'; // Ensure this file exists in the components directory
+import FileUploader from './components/FileUploader'; 
 import FileList from './components/FileList';
 import FileSearch from './components/FileSearch';
-import StorageStatsPanel from './components/StorageStatsPanel'; // Ensure this file exists in the components directory
+import StorageStatsPanel from './components/StorageStatsPanel'; 
 
 import { FileData, FileFilters, StorageStats } from './types/files';
 import fileService from './services/apiService';
